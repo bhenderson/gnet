@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"syscall"
 	"time"
 
 	"github.com/bhenderson/gnet"
@@ -16,6 +17,8 @@ func main() {
 		time.Sleep(5 * time.Second)
 		fmt.Fprintf(w, "hello world!")
 	})
+
+	go gnet.Signal(l, syscall.SIGQUIT)
 
 	log.Fatal(http.Serve(l, nil))
 }
