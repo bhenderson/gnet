@@ -20,5 +20,6 @@ func main() {
 
 	go gnet.Signal(l, syscall.SIGQUIT)
 
+	log.Println("started on 8080")
 	log.Fatal(http.Serve(l, nil))
 }
