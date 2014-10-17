@@ -14,7 +14,9 @@ func Signal(l net.Listener, sigs ...os.Signal) {
 	for sig := range ch {
 		for _, si := range sigs {
 			if sig == si {
-				l.(*Listener).closec <- struct{}{}
+				if gl, ok := l.(*Listener); ok {
+					gl.closec <- struct{}{}
+				}
 				break // inner loop
 			}
 		}
