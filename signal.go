@@ -14,7 +14,7 @@ func Signal(l net.Listener, sigs ...os.Signal) {
 	for sig := range ch {
 		for _, si := range sigs {
 			if sig == si {
-				l.Close()
+				l.(*Listener).closec <- struct{}{}
 				break // inner loop
 			}
 		}

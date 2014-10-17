@@ -1,36 +1,46 @@
 package gnet
 
 import (
+	"errors"
 	"net"
 	"sync"
 )
 
+var StoppedError = errors.New("Server was stopped.")
+
 func NewListener(l net.Listener) *Listener {
-	return &Listener{
+	gl := &Listener{
 		Listener: l,
+		closec:   make(chan struct{}),
+		acceptc:  make(chan *Conn),
 	}
+	go gl.accept()
+	return gl
 }
 
 type Listener struct {
-	wg sync.WaitGroup
+	wg      sync.WaitGroup
+	closec  chan struct{}
+	acceptc chan *Conn
 	net.Listener
 }
 
 var _ net.Listener = &Listener{}
 
 func (l *Listener) Accept() (net.Conn, error) {
-	// do something
-	l.wg.Add(1)
-	c, e := l.Listener.Accept()
-	return &Conn{l.wg, c}, e
+	select {
+	case <-l.closec:
+		l.wg.Wait()
+	case c := <-l.acceptc:
+		l.wg.Add(1)
+		c.wg = &l.wg
+		return c, c.e
+	}
+	return nil, StoppedError
 }
 
-type Conn struct {
-	wg sync.WaitGroup
-	net.Conn
-}
-
-func (c *Conn) Close() error {
-	c.wg.Done()
-	return c.Conn.Close()
+func (l *Listener) accept() {
+	for {
+		l.acceptc <- newConn(l.Listener.Accept())
+	}
 }

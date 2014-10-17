@@ -1,5 +1,7 @@
 package gnet
 
+import "net"
+
 type tlistener struct{}
 
 var (
