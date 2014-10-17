@@ -40,6 +40,13 @@ func (l *Listener) Accept() (net.Conn, error) {
 }
 
 func (l *Listener) accept() {
+	// This effectively turns the Accept() method into a channel so we can
+	// select on it. Otherwise, if we were blocking on Accept() we would miss
+	// the close channel.
+	//
+	// This also has the added benefit of not calling Accept() until we're
+	// ready, as opposed to in the initializer which would be somewhat
+	// unexpected.
 	for {
 		l.acceptc <- newConn(l.Listener.Accept())
 	}
